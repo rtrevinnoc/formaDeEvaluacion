@@ -1,7 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue'
 
-// State for the form metadata
 const metadata = ref({
   materia: '',
   profesor: '',
@@ -12,7 +11,6 @@ const metadata = ref({
   notas: '',
 })
 
-// State for tables
 const evaluations = ref([
   { id: 1, percentage: 25, description: '' },
   { id: 2, percentage: 30, description: '' },
@@ -23,11 +21,9 @@ const projects = ref([
   { id: 2, percentage: 35, description: 'Elaboración de proyecto asignado por profesor' },
 ])
 
-// Helper to add/remove rows
 const addRow = (list) => list.push({ id: Date.now(), percentage: 0, description: '' })
 const removeRow = (list, index) => list.splice(index, 1)
 
-// Totals calculation
 const evalTotal = computed(() =>
   evaluations.value.reduce((sum, item) => sum + Number(item.percentage), 0),
 )
@@ -44,39 +40,22 @@ const printForm = () => {
 <template>
   <div class="min-h-screen bg-gray-100 p-8 flex flex-col items-center">
     <div
-      class="no-print bg-white p-6 rounded-lg shadow-md mb-8 w-full max-w-4xl border-l-4 border-blue-600"
+      class="no-print flex justify-between items-center w-full max-w-4xl mb-4 bg-white p-4 rounded shadow-sm"
     >
-      <h2 class="text-xl font-bold mb-4">Generador de Forma de Evaluación</h2>
-      <div class="grid grid-cols-2 gap-4 mb-6">
-        <input
-          v-model="metadata.materia"
-          placeholder="Unidad de Aprendizaje"
-          class="border p-2 rounded"
-        />
-        <input
-          v-model="metadata.profesor"
-          placeholder="Nombre del Profesor"
-          class="border p-2 rounded"
-        />
-        <input v-model="metadata.carrera" placeholder="Carrera" class="border p-2 rounded" />
-        <input
-          v-model="metadata.periodo"
-          placeholder="Periodo Semestral"
-          class="border p-2 rounded"
-        />
+      <div class="flex items-center gap-4">
+        <span :class="grandTotal === 100 ? 'text-green-600' : 'text-red-600'" class="font-bold">
+          Total: {{ grandTotal }}%
+        </span>
+        <span v-if="grandTotal !== 100" class="text-xs text-red-500 italic">
+          (Debe sumar 100%)
+        </span>
       </div>
-
-      <div class="flex justify-between items-center">
-        <p :class="grandTotal === 100 ? 'text-green-600' : 'text-red-600'" class="font-bold">
-          Total General: {{ grandTotal }}% (Debe ser 100%)
-        </p>
-        <button
-          @click="printForm"
-          class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition"
-        >
-          Imprimir / Guardar PDF
-        </button>
-      </div>
+      <button
+        @click="printForm"
+        class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition font-medium"
+      >
+        Imprimir / Guardar PDF
+      </button>
     </div>
 
     <div
@@ -84,37 +63,60 @@ const printForm = () => {
       class="bg-white shadow-2xl w-[210mm] min-h-[297mm] p-[15mm] text-sm text-gray-800"
     >
       <div class="flex justify-between items-center mb-8">
-        <div class="flex items-center gap-2">
-          <img src="/uanl_logo.png" alt="UANL Logo" class="w-28 h-auto object-contain" />
-        </div>
+        <img src="/uanl_logo.png" alt="UANL" class="w-28 h-auto object-contain" />
         <div class="text-center font-bold text-lg uppercase">Forma de Evaluación</div>
-        <div class="flex items-center gap-2 text-right">
-          <img src="/fcfm_logo.webp" alt="FCFM Logo" class="w-32 h-auto object-contain" />
-        </div>
+        <img src="/fcfm_logo.webp" alt="FCFM" class="w-32 h-auto object-contain" />
       </div>
 
       <div class="space-y-6 mb-8 text-center">
-        <div class="border-b border-black mx-auto w-3/4 pb-1">{{ metadata.materia || ' ' }}</div>
-        <div class="text-[10px] uppercase mt-[-20px]">(Unidad de Aprendizaje)</div>
+        <div class="relative mx-auto w-3/4">
+          <input
+            v-model="metadata.materia"
+            placeholder="Escriba la materia..."
+            class="w-full border-b border-black pb-1 text-center outline-none uppercase font-semibold"
+          />
+          <div class="text-[10px] uppercase mt-1">(Unidad de Aprendizaje)</div>
+        </div>
 
-        <div class="border-b border-black mx-auto w-3/4 pb-1">{{ metadata.profesor || ' ' }}</div>
-        <div class="text-[10px] uppercase mt-[-20px]">(Nombre del Profesor)</div>
+        <div class="relative mx-auto w-3/4">
+          <input
+            v-model="metadata.profesor"
+            placeholder="Escriba el nombre del profesor..."
+            class="w-full border-b border-black pb-1 text-center outline-none"
+          />
+          <div class="text-[10px] uppercase mt-1">(Nombre del Profesor)</div>
+        </div>
 
         <div class="grid grid-cols-4 gap-4 text-center mt-4">
           <div>
-            <div class="border-b border-black pb-1">{{ metadata.carrera }}</div>
+            <input
+              v-model="metadata.carrera"
+              class="w-full border-b border-black pb-1 text-center outline-none"
+              placeholder="..."
+            />
             <div class="text-[10px] mt-1">(Carrera)</div>
           </div>
           <div>
-            <div class="border-b border-black pb-1">{{ metadata.periodo }}</div>
+            <input
+              v-model="metadata.periodo"
+              class="w-full border-b border-black pb-1 text-center outline-none"
+              placeholder="..."
+            />
             <div class="text-[10px] mt-1">(Periodo)</div>
           </div>
           <div>
-            <div class="border-b border-black pb-1">{{ metadata.grupo }}</div>
+            <input
+              v-model="metadata.grupo"
+              class="w-full border-b border-black pb-1 text-center outline-none"
+              placeholder="..."
+            />
             <div class="text-[10px] mt-1">(Grupo)</div>
           </div>
           <div>
-            <div class="border-b border-black pb-1">{{ metadata.fecha }}</div>
+            <input
+              v-model="metadata.fecha"
+              class="w-full border-b border-black pb-1 text-center outline-none"
+            />
             <div class="text-[10px] mt-1">(Fecha)</div>
           </div>
         </div>
@@ -125,7 +127,7 @@ const printForm = () => {
           No. de Evaluaciones en el semestre: {{ evaluations.length }}
         </div>
         <table class="w-full border-collapse border border-black">
-          <thead class="bg-gray-200">
+          <thead class="bg-gray-100 uppercase text-[11px]">
             <tr>
               <th class="border border-black p-1 w-24">Evaluación</th>
               <th class="border border-black p-1 w-16">%</th>
@@ -144,10 +146,12 @@ const printForm = () => {
                 />
               </td>
               <td class="border border-black p-0">
-                <input v-model="item.description" class="w-full p-1 outline-none" />
+                <input v-model="item.description" class="w-full p-1 outline-none px-2" />
               </td>
               <td class="border border-black p-1 no-print text-center">
-                <button @click="removeRow(evaluations, index)" class="text-red-500">×</button>
+                <button @click="removeRow(evaluations, index)" class="text-red-500 font-bold">
+                  ×
+                </button>
               </td>
             </tr>
             <tr class="font-bold bg-gray-50">
@@ -158,7 +162,10 @@ const printForm = () => {
             </tr>
           </tbody>
         </table>
-        <button @click="addRow(evaluations)" class="no-print mt-2 text-blue-500 text-xs">
+        <button
+          @click="addRow(evaluations)"
+          class="no-print mt-2 text-blue-600 text-xs font-semibold hover:underline"
+        >
           + Agregar Evaluación
         </button>
       </div>
@@ -166,7 +173,7 @@ const printForm = () => {
       <div class="mb-6">
         <div class="font-bold mb-2">No. de Proyectos: {{ projects.length }}</div>
         <table class="w-full border-collapse border border-black">
-          <thead class="bg-gray-200">
+          <thead class="bg-gray-100 uppercase text-[11px]">
             <tr>
               <th class="border border-black p-1 w-24">Proyectos</th>
               <th class="border border-black p-1 w-16">%</th>
@@ -185,10 +192,12 @@ const printForm = () => {
                 />
               </td>
               <td class="border border-black p-0">
-                <input v-model="item.description" class="w-full p-1 outline-none" />
+                <input v-model="item.description" class="w-full p-1 outline-none px-2" />
               </td>
               <td class="border border-black p-1 no-print text-center">
-                <button @click="removeRow(projects, index)" class="text-red-500">×</button>
+                <button @click="removeRow(projects, index)" class="text-red-500 font-bold">
+                  ×
+                </button>
               </td>
             </tr>
             <tr class="font-bold bg-gray-50">
@@ -199,18 +208,22 @@ const printForm = () => {
             </tr>
           </tbody>
         </table>
-        <button @click="addRow(projects)" class="no-print mt-2 text-blue-500 text-xs">
+        <button
+          @click="addRow(projects)"
+          class="no-print mt-2 text-blue-600 text-xs font-semibold hover:underline"
+        >
           + Agregar Proyecto
         </button>
       </div>
 
       <div class="mt-8">
-        <div class="font-bold">Notas</div>
-        <div class="border border-black w-full min-h-[40px] p-2 mt-1">
+        <div class="font-bold text-xs uppercase mb-1">Notas:</div>
+        <div class="border border-black w-full min-h-[60px] p-2">
           <textarea
             v-model="metadata.notas"
-            class="w-full border-none outline-none resize-none overflow-hidden"
-            rows="2"
+            placeholder="Observaciones adicionales..."
+            class="w-full border-none outline-none resize-none overflow-hidden text-xs italic"
+            rows="3"
           ></textarea>
         </div>
       </div>
@@ -238,7 +251,15 @@ const printForm = () => {
     box-shadow: none !important;
     margin: 0 !important;
     width: 100% !important;
+    border: none !important;
   }
+}
+
+input::placeholder {
+  color: #d1d5db; /* gray-300 */
+  font-weight: normal;
+  font-style: italic;
+  font-size: 0.8rem;
 }
 
 input {
