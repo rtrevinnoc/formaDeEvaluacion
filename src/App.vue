@@ -1,5 +1,10 @@
 <script setup>
 import { ref, computed } from 'vue'
+import QrcodeVue from 'qrcode.vue'
+
+// Replace this with your deployed Google Apps Script URL
+const GOOGLE_SCRIPT_URL =
+  'https://script.google.com/macros/s/AKfycbxcmOJ96aHib9rgOjOx7OnvasNwd4ZrPthZbzy0xkmhH7M20bylZZs7N7v8uODU64mIlQ/exec'
 
 const metadata = ref({
   materia: '',
@@ -21,6 +26,9 @@ const projects = ref([
   { id: 2, percentage: 35, description: 'Elaboración de proyecto asignado por profesor' },
 ])
 
+const trackingLink = ref('')
+const isGenerating = ref(false)
+
 const addRow = (list) => list.push({ id: Date.now(), percentage: 0, description: '' })
 const removeRow = (list, index) => list.splice(index, 1)
 
@@ -32,8 +40,48 @@ const projectTotal = computed(() =>
 )
 const grandTotal = computed(() => evalTotal.value + projectTotal.value)
 
-const printForm = () => {
-  window.print()
+const generateAndPrint = async () => {
+  const requiredFields = ['materia', 'profesor', 'carrera', 'periodo', 'grupo']
+
+  const missingFields = requiredFields.filter(
+    (field) => !metadata.value[field] || metadata.value[field].trim() === '',
+  )
+
+  if (missingFields.length > 0) {
+    alert(`Por favor, complete los siguientes campos: ${missingFields.join(', ')}`)
+    return
+  }
+
+  if (grandTotal.value !== 100) {
+    alert('El total debe sumar exactamente 100% antes de generar el registro.')
+    return
+  }
+
+  isGenerating.value = true
+
+  try {
+    const response = await fetch(GOOGLE_SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        grupo: metadata.value.grupo,
+        materia: metadata.value.materia,
+        timestamp: new Date().toLocaleString(),
+      }),
+    })
+
+    if (response.ok) {
+      const result = await response.json()
+      trackingLink.value = result.url
+
+      setTimeout(() => {
+        window.print()
+        isGenerating.value = false
+      }, 500)
+    }
+  } catch (error) {
+    console.error('Fetch error:', error)
+    isGenerating.value = false
+  }
 }
 </script>
 
@@ -51,10 +99,11 @@ const printForm = () => {
         </span>
       </div>
       <button
-        @click="printForm"
-        class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition font-medium"
+        @click="generateAndPrint"
+        :disabled="isGenerating"
+        class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition font-medium disabled:bg-gray-400"
       >
-        Imprimir / Guardar PDF
+        {{ isGenerating ? 'Generando Registro...' : 'Imprimir / Guardar PDF' }}
       </button>
     </div>
 
@@ -225,6 +274,15 @@ const printForm = () => {
             class="w-full border-none outline-none resize-none overflow-hidden text-xs italic"
             rows="3"
           ></textarea>
+        </div>
+
+        <div class="col-span-1 flex flex-col items-center justify-end pb-2">
+          <div v-if="trackingLink" class="border p-1 border-gray-200">
+            <qrcode-vue :value="trackingLink" :size="70" level="H" render-as="svg" />
+          </div>
+          <span v-if="trackingLink" class="text-[7px] mt-1 text-gray-400 uppercase"
+            >Registro de Conformidad</span
+          >
         </div>
       </div>
 
